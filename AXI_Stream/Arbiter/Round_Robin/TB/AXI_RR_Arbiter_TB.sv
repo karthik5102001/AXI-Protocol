@@ -55,7 +55,7 @@ AXI_Arbiter DUT(Aclk,Aresetn,s_axis_tready1,s_axis_tready2,s_axis_tvalid1,s_axis
 		s_axis_tvalid1 <= 1'b0;
 		s_axis_tvalid2 <= 1'b0;
 		s_axis_tlast1  <= 1'b0;
-//		m_axis_tready <= 1'b0; // dont off 
+//		m_axis_tready <= 1'b0; // dont off (not needed)
 
 		/// Master 2
 
@@ -146,7 +146,7 @@ AXI_Arbiter DUT(Aclk,Aresetn,s_axis_tready1,s_axis_tready2,s_axis_tvalid1,s_axis
 
 	initial begin
 		$dumpfile("wave_fsdb.fsdb");
-    	$dumpvars(0,Arbiter_TB);
+    		$dumpvars(0,Arbiter_TB);
 		end
 
 

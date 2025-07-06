@@ -10,19 +10,19 @@
 module AXI_Arbiter (
 	input wire Aclk,
 	input wire Areset_n,
-	output reg s_axis_tready1, // output going to its respected master
-	output reg s_axis_tready2,
-	input wire s_axis_tvalid1,
-	input wire s_axis_tvalid2,
+	output reg s_axis_tready1, // output going to its respected master1 (anyways we keep this high always)
+	output reg s_axis_tready2, // output going to its respected master2 (anyways we keep this high always)
+	input wire s_axis_tvalid1, // First Priority 
+	input wire s_axis_tvalid2, // Second Priority 
 	input wire s_axis_tlast1,
 	input wire s_axis_tlast2,
-	input wire [7:0] s_axis_tdata1,
+	input wire [7:0] s_axis_tdata1, 
 	input wire [7:0] s_axis_tdata2,
 
-	input wire m_axis_tready,
-	output reg m_axis_tlast,
-	output reg m_axis_tvalid,
-	output reg [7:0] m_axis_tdata
+	input wire m_axis_tready, // From the Slave side to Arbiter 
+	output reg m_axis_tlast,  // From Arbiter to Slave side 
+	output reg m_axis_tvalid, // From Arbiter to Slave side
+	output reg [7:0] m_axis_tdata // From Arbiter to Slave side
 );
 
 typedef enum bit [1:0] {idle = 2'b00, s1 = 2'b01, s2 = 2'b10} state_reg;
@@ -89,8 +89,8 @@ always_comb begin
 							reg_last = s_axis_tlast2;
 								if(s_axis_tvalid1 && s_axis_tready1)
 								begin
-									next_state = s1;// if we have responce from other master(M2)
-								end					// then we go to S2
+									next_state = s1;// if we have responce from other master(M1)
+								end					// then we go to S1
 								else begin
 									next_state = idle;
 								end

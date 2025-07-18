@@ -44,11 +44,11 @@ input wire m_axi_arready,
 
 /// AXI Read ack + Read Data
 
-output reg [31:0] m_axi_raddr,
+// output reg [31:0] m_axi_raddr,
 input  wire        m_axi_rvalid,
 output reg        m_axi_rready,
 
-input  wire       m_axi_rdata,
+input  wire [31:0]  m_axi_rdata,
 input  wire [1:0] m_axi_rresp
 );
 
@@ -104,7 +104,7 @@ always @(*) begin
                m_axi_awvalid    <= 1'b1;
                m_axi_wdata      <= write_data;
                m_axi_wvalid     <= 1'b1;
-               m_axi_wstrb      <= m_axi_wstrb;
+               m_axi_wstrb      <= write_strb;
                m_axi_bready     <= 1'b1;
                if(m_axi_awready && m_axi_wready && m_axi_bvalid) begin nxt_state_wr <= complete_write_trans; write_resp = m_axi_bresp; end  // If we get all the responce just jump to complete
                else if(m_axi_awready && m_axi_wready)    nxt_state_wr <= wait_for_write_resp;        // if only address and data of write ready responce is then wait for write responce
@@ -145,6 +145,7 @@ always @(*) begin
    complete_write_trans : begin
                  nxt_state_wr <= wr_idle;
                  m_axi_bready <= 1'b0;
+                 m_axi_awvalid    <= 1'b0;                                            // we got address and data ready responce we make address and data valid low and wait for write responce
    end
    default : nxt_state_wr <= wr_idle;
   endcase
@@ -230,18 +231,18 @@ case(state_rd)
         else nxt_state_rd <= rd_idle;
     end
     raddr_write : begin
-        m_axi_awvalid <= 1'b1;
-        m_axi_awaddr <= read_addr; 
+        m_axi_arvalid <= 1'b1;
+        m_axi_araddr <= read_addr; 
         m_axi_rready <= 1'b1;
-        if(m_axi_awready && m_axi_rvalid) begin nxt_state_rd <= complete_rx_trans; read_resp <= m_axi_rresp; end    // if we get read ready and read valid signal just finish the transfer
-        else if (m_axi_awready) nxt_state_rd <= wait_for_rdata;                          // if we get read address ready we wait for read data ready
+        if(m_axi_arready && m_axi_rvalid) begin nxt_state_rd <= complete_rx_trans; read_resp <= m_axi_rresp; end    // if we get read ready and read valid signal just finish the transfer
+        else if (m_axi_arready) nxt_state_rd <= wait_for_rdata;                          // if we get read address ready we wait for read data ready
         else if (counter_rd == 15) nxt_state_rd <= no_resp_raddr;
         else nxt_state_rd <= raddr_write;
     end
     wait_for_rdata : begin
-        m_axi_awvalid <= 1'b0;
-        m_axi_awaddr <= 32'd0;
-        if(m_axi_wvalid) begin nxt_state_rd <= complete_rx_trans; read_resp <= m_axi_rresp; end       // if we get the read valid responce we declare it as complete responce
+        m_axi_arvalid <= 1'b0;
+        m_axi_araddr <= 32'd0;
+        if(m_axi_rvalid) begin nxt_state_rd <= complete_rx_trans; read_resp <= m_axi_rresp; end       // if we get the read valid responce we declare it as complete responce
         else if(counter_rd == 15)  nxt_state_rd <= no_resp_rdata;
     end
     no_resp_raddr : begin
@@ -255,8 +256,10 @@ case(state_rd)
     complete_rx_trans : begin
         m_axi_rready <= 1'b0;
         m_axi_arvalid <= 1'b0;
+        m_axi_araddr <= 32'd0;
         read_data_out <= m_axi_rdata;
         read_resp <= m_axi_rresp;
+              nxt_state_rd <= rd_idle;
     end
     default : nxt_state_rd <= rd_idle;
     endcase 
